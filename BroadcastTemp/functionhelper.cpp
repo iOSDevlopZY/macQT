@@ -77,7 +77,11 @@ void FunctionHelper::startFunction(char *argv[])
             else
             {
                 action = ACTION::DOWNLOAD;
+#ifdef Q_OS_MACOS
+                downloadKey = paramList[1].replace("\\","/");
+#else
                 downloadKey = paramList[1];
+#endif
             }
             // 开启定时器
             startActionTimer();
@@ -195,10 +199,11 @@ void FunctionHelper::onUpload()
         {
             recordResult(QString("%1,%2").arg(TRANSTAG::UPLOAD_OK).arg(guid));
         }
-        exit(0);
+
     } catch (...) {
         qWarning()<<QString::fromLocal8Bit("onUpload出现异常");
     }
+     exit(0);
 }
 
 /**
@@ -206,30 +211,75 @@ void FunctionHelper::onUpload()
  */
 void FunctionHelper::onDownload()
 {
-    QString url = QString("http://%1:%2/api/FileOp/PostGetTemplateFiles?"
-                                        "templateKey=%3").arg(IP).arg(Port).arg(downloadKey);
-    QByteArray res = NetworkHelper::sharedInstance()->postRequest(url);
-    if(res.length() == 0)
+    try
     {
-        recordResult(QString("%1,%2").arg(TRANSTAG::DOWNLOAD_FAILED).arg(QString::fromLocal8Bit("获取文件列表失败")));
-        exit(-1);
-    }
-    QJsonParseError error;
-    QJsonDocument doc = QJsonDocument::fromJson(res,&error);
-    if(error.error == QJsonParseError::NoError)
-    {
-        QJsonObject obj = doc.object();
-        if(obj["code"].toString() != "200")
+        QString url = QString("http://%1:%2/api/FileOp/PostGetTemplateFiles?"
+                                            "templateKey=%3").arg(IP).arg(Port).arg(downloadKey);
+        QByteArray res = NetworkHelper::sharedInstance()->postRequest(url);
+        if(res.length() == 0)
         {
-            recordResult(QString("%1,%2").arg(TRANSTAG::DOWNLOAD_FAILED).arg(obj["error"].toString()));
+            recordResult(QString("%1,%2").arg(TRANSTAG::DOWNLOAD_FAILED).arg(QString::fromLocal8Bit("获取文件列表失败")));
             exit(-1);
         }
-        else
+        QJsonParseError error;
+        QJsonDocument doc = QJsonDocument::fromJson(res,&error);
+        if(error.error == QJsonParseError::NoError)
         {
-            QJsonArray ja = obj["result"].toArray();
+            QJsonObject obj = doc.object();
+            if(obj["code"].toString() != "200")
+            {
+                recordResult(QString("%1,%2").arg(TRANSTAG::DOWNLOAD_FAILED).arg(obj["error"].toString()));
+                exit(-1);
+            }
+            else
+            {
+                QJsonArray ja = obj["result"].toArray();
+#ifdef Q_OS_MACOS
+                QString downloadPath = QCoreApplication::applicationDirPath() + "/download/"+ downloadKey;
+#else
+                QString downloadPath = QCoreApplication::applicationDirPath() + "\\download\\"+ downloadKey;
+#endif
+                createFullDir(downloadPath);
+                for(int i = 0 ;i < ja.count(); i++)
+                {
+                    QJsonObject obj = ja.at(i).toObject();
+                    QString filePath = obj["path"].toString();
+                    QString fileName = obj["file"].toString();
+                    QString url = QString("http://%1:%2/%3").arg(IP).arg(Port).arg(filePath);
+#ifdef Q_OS_MACOS
+                    QString dst = QString("%1/%2").arg(downloadPath).arg(fileName);
+#else
+                    QString dst = QString("%1\\%2").arg(downloadPath).arg(fileName);
+#endif
+                    QFileInfo fileInfo(dst);
+                    // 创建文件夹
+                    createFullDir(fileInfo.dir().path());
 
+                    bool res = false;
+                    // 下载文件，每个文件尝试三次
+                    for(int i = 0;i < 3;i++)
+                    {
+                        res = downLoadFile(url,dst);
+                        if(res)
+                            break;
+                    }
+                    // 下载失败
+                    if(!res)
+                    {
+                        recordResult(QString("%1,%2").arg(TRANSTAG::DOWNLOAD_FAILED).arg(QString(QString::fromLocal8Bit("%1下载失败！")).arg(url)));
+                        qWarning()<<url<<QString::fromLocal8Bit("下载失败，关闭主程序");
+                        exit(-1);
+                    }
+                }
+                recordResult(QString("%1,%2").arg(TRANSTAG::DOWNLOAD_OK).arg(downloadPath));
+
+            }
         }
+    } catch (...) {
+        qWarning()<<QString::fromLocal8Bit("onDownload出现异常");
+        recordResult(QString("%1,%2").arg(TRANSTAG::DOWNLOAD_FAILED).arg(QString::fromLocal8Bit("onDownload出现异常")));
     }
+    exit(0);
 }
 
 /**
@@ -256,6 +306,62 @@ QFileInfoList FunctionHelper::getFiles(QString dirPath)
         qWarning()<<QString::fromLocal8Bit("getFiles出现异常");
     }
     return filesList;
+}
+
+/**
+ * @brief 创建下载文件夹
+ * @param 文件夹
+ */
+void FunctionHelper::createFullDir(QString path)
+{
+    QFile downloadFile(path);
+    if(!downloadFile.exists())
+    {
+#ifdef Q_OS_MACOS
+        QString dirPath = path.left(path.lastIndexOf('/'));
+        QStringList pathList = dirPath.split('/');
+        if(pathList.length() > 1)
+        {
+            QString path = pathList[0];
+            for (int i = 1;i < pathList.count();i++)
+            {
+                path.append(QString("/%1").arg(pathList.at(i)));
+                QDir dir(path);
+                if(!dir.exists())
+                {
+                    dir.mkpath(path);
+                }
+            }
+        }
+#else
+        QString dirPath = path.left(path.lastIndexOf('\\'));
+        QStringList pathList = dirPath.split('\\');
+        if(pathList.length() > 1)
+        {
+            QString path = pathList[0];
+            for (int i = 1;i < pathList.count();i++)
+            {
+                path.append(QString("\\%1").arg(pathList.at(i)));
+                QDir dir(path);
+                if(!dir.exists())
+                {
+                    dir.mkpath(path);
+                }
+            }
+        }
+#endif
+    }
+    downloadFile.close();
+}
+
+/**
+ * @brief 下载文件
+ * @param url
+ * @param 目标路径
+ */
+bool FunctionHelper::downLoadFile(QString url, QString dst)
+{
+
 }
 
 /**
