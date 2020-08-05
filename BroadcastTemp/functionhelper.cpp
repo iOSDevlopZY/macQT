@@ -152,6 +152,8 @@ void FunctionHelper::onUpload()
         // 上传文件
         foreach(QFileInfo info , files)
         {
+            if(info.fileName() == ".DS_Store" || !info.fileName().contains("."))
+                continue ;
             index ++;
             QFile uploadFile(info.filePath());
             if(uploadFile.exists())
@@ -249,7 +251,8 @@ void FunctionHelper::onDownload()
                     QString fileName = obj["file"].toString();
                     QString url = QString("http://%1:%2/%3").arg(IP).arg(Port).arg(filePath);
 #ifdef Q_OS_MACOS
-                    QString dst = QString("%1/%2").arg(downloadPath).arg(fileName);
+                    QString dst = QString("%1/%2").arg(downloadPath).arg(fileName.replace("\\","/"));
+
 #else
                     QString dst = QString("%1\\%2").arg(downloadPath).arg(fileName);
 #endif
