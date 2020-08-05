@@ -170,7 +170,7 @@ void FunctionHelper::onUpload()
                         if(error.error == QJsonParseError::NoError)
                         {
                             QJsonObject obj = doc.object();
-                            if(obj["code"].toString() != "200")
+                            if(obj["code"].toInt() != 200)
                             {
                                 qWarning()<<QString::fromLocal8Bit("上传文件失败：")<<info.fileName();
                             }
@@ -228,7 +228,7 @@ void FunctionHelper::onDownload()
         if(error.error == QJsonParseError::NoError)
         {
             QJsonObject obj = doc.object();
-            if(obj["code"].toString() != "200")
+            if(obj["code"].toInt() != 200)
             {
                 recordResult(QString("%1,%2").arg(TRANSTAG::DOWNLOAD_FAILED).arg(obj["error"].toString()));
                 exit(-1);
@@ -241,7 +241,6 @@ void FunctionHelper::onDownload()
 #else
                 QString downloadPath = QCoreApplication::applicationDirPath() + "\\download\\"+ downloadKey;
 #endif
-
                 createFullDir(downloadPath);
                 for(int i = 0 ;i < ja.count(); i++)
                 {
@@ -326,7 +325,7 @@ void FunctionHelper::createFullDir(QString path)
     if(!downloadFile.exists())
     {
 #ifdef Q_OS_MACOS
-        QString dirPath = path.left(path.lastIndexOf('/'));
+        QString dirPath = path;
         QStringList pathList = dirPath.split('/');
         if(pathList.length() > 1)
         {
@@ -335,6 +334,7 @@ void FunctionHelper::createFullDir(QString path)
             {
                 path.append(QString("/%1").arg(pathList.at(i)));
                 QDir dir(path);
+
                 if(!dir.exists())
                 {
                     dir.mkpath(path);
@@ -373,8 +373,10 @@ bool FunctionHelper::downLoadFile(QString url, QString dst)
     int timeout = 30000;
 
     QFile f(dst);
+
     // 创建下载文件
-    if (!f.open(QIODevice::WriteOnly)) {
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Append)) {
+        f.close();
         return false;
     }
     QNetworkAccessManager m;
@@ -384,9 +386,10 @@ bool FunctionHelper::downLoadFile(QString url, QString dst)
     QEventLoop loop;
     QTimer t;
     QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-    QObject::connect(reply, &QNetworkReply::downloadProgress,
+    QObject::connect(reply, &QNetworkReply::readyRead,
                         [=, &f, &t](){
            f.write(reply->readAll());
+           f.flush();
            if (t.isActive()) {
                t.start(timeout);
            }
@@ -397,7 +400,8 @@ bool FunctionHelper::downLoadFile(QString url, QString dst)
     }
     loop.exec();
     if (reply->error() != QNetworkReply::NoError) {
-           return false;
+        f.close();
+        return false;
     }
    f.close();
    reply->deleteLater();
