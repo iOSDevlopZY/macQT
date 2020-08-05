@@ -35,12 +35,14 @@ private:
     QString Port;                                        // API端口号
     ACTION action;                                       // 当前模式
     QString uploadSrcDir;                                // 上传文件夹路径
+    QString downloadKey;                                 // 下载时KEY
     int timerID;                                         // 定时器
 
     void startActionTimer();                             // 开启定时器
     void recordResult(QString res);                      // 记录错误原因
     void onUpload();                                     // 上传处理方法
-    QFileInfoList getFiles(QString dirPath);                      // 获取文件夹下所有文件
+    void onDownload();                                   // 下载处理方法
+    QFileInfoList getFiles(QString dirPath);             // 获取文件夹下所有文件
     static void Release();                               // 释放指针
 
 protected:

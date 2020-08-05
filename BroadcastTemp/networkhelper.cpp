@@ -65,10 +65,40 @@ QByteArray NetworkHelper::uploadFile(QString urlStr, QByteArray fileByte)
 }
 
 /**
+ * @brief POST请求
+ * @param url
+ * @return
+ */
+QByteArray NetworkHelper::postRequest(QString urlStr)
+{
+    QUrl url(urlStr);
+    QNetworkRequest request;
+    request.setUrl(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+
+    QByteArray postArray;
+
+    request.setHeader(QNetworkRequest::ContentLengthHeader,postArray.length());
+
+    QNetworkReply *Reply = netManager->post(request, postArray);
+    connect (Reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(netError(QNetworkReply::NetworkError)));
+    QEventLoop eventLoop;
+    connect(netManager, SIGNAL(finished(QNetworkReply*)), &eventLoop, SLOT(quit()));
+    eventLoop.exec();
+    disconnect(netManager, SIGNAL(finished(QNetworkReply*)), &eventLoop, SLOT(quit()));
+
+    QByteArray data = Reply->readAll();
+    Reply->deleteLater();
+
+    return data;
+}
+
+/**
  * @brief 请求出现错误
  * @param 错误
  */
 void NetworkHelper::netError(QNetworkReply::NetworkError err)
 {
+    Q_UNUSED(err);
     emit netError();
 }

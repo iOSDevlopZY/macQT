@@ -11,6 +11,7 @@
 #include <QJsonDocument>
 #include <QJsonParseError>
 #include <QJsonObject>
+#include <QJsonArray>
 
 // 静态变量需要在类体的外面进行初始化
 FunctionHelper *FunctionHelper::m_Instance = NULL;
@@ -20,6 +21,7 @@ FunctionHelper::FunctionHelper(QObject *parent) : QObject(parent)
     IP = "";
     Port = "";
     uploadSrcDir = "";
+    downloadKey = "";
     timerID = 0;
 }
 
@@ -75,6 +77,7 @@ void FunctionHelper::startFunction(char *argv[])
             else
             {
                 action = ACTION::DOWNLOAD;
+                downloadKey = paramList[1];
             }
             // 开启定时器
             startActionTimer();
@@ -151,8 +154,8 @@ void FunctionHelper::onUpload()
                 if(uploadFile.open(QIODevice::ReadOnly))
                 {
                     QByteArray ba = uploadFile.readAll();
-                    QString url = QString("http://192.168.2.68:7000/api/FileOp/PostUploadTemplate?"
-                                          "templateKey=%1&filename=%2").arg(guid).arg(info.filePath().remove(0, uploadSrcDir.length()));
+                    QString url = QString("http://%1:%2/api/FileOp/PostUploadTemplate?"
+                                          "templateKey=%3&filename=%4").arg(IP).arg(Port).arg(guid).arg(info.filePath().remove(0, uploadSrcDir.length()));
                     // 每个文件有三次上传机会
                     for(int i = 0;i < 3; i++)
                     {
@@ -195,6 +198,37 @@ void FunctionHelper::onUpload()
         exit(0);
     } catch (...) {
         qWarning()<<QString::fromLocal8Bit("onUpload出现异常");
+    }
+}
+
+/**
+ * @brief 下载处理方法
+ */
+void FunctionHelper::onDownload()
+{
+    QString url = QString("http://%1:%2/api/FileOp/PostGetTemplateFiles?"
+                                        "templateKey=%3").arg(IP).arg(Port).arg(downloadKey);
+    QByteArray res = NetworkHelper::sharedInstance()->postRequest(url);
+    if(res.length() == 0)
+    {
+        recordResult(QString("%1,%2").arg(TRANSTAG::DOWNLOAD_FAILED).arg(QString::fromLocal8Bit("获取文件列表失败")));
+        exit(-1);
+    }
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(res,&error);
+    if(error.error == QJsonParseError::NoError)
+    {
+        QJsonObject obj = doc.object();
+        if(obj["code"].toString() != "200")
+        {
+            recordResult(QString("%1,%2").arg(TRANSTAG::DOWNLOAD_FAILED).arg(obj["error"].toString()));
+            exit(-1);
+        }
+        else
+        {
+            QJsonArray ja = obj["result"].toArray();
+
+        }
     }
 }
 
@@ -255,6 +289,7 @@ void FunctionHelper::timerEvent(QTimerEvent *event)
             // 执行下载
             case ACTION::DOWNLOAD:
                 qDebug()<<QString::fromLocal8Bit("------- 执行下载 -------");
+                onDownload();
                 break;
         }
     }
