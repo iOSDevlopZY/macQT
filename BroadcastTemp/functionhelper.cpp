@@ -378,7 +378,7 @@ bool FunctionHelper::downLoadFile(QString url, QString dst)
     QFile f(dst);
 
     // 创建下载文件
-    if (!f.open(QIODevice::WriteOnly | QIODevice::Append)) {
+    if (!f.open(QIODevice::WriteOnly)) {
         f.close();
         return false;
     }
