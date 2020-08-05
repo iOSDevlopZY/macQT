@@ -12,6 +12,7 @@
 #include <QJsonParseError>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QTimer>
 
 // 静态变量需要在类体的外面进行初始化
 FunctionHelper *FunctionHelper::m_Instance = NULL;
@@ -216,6 +217,7 @@ void FunctionHelper::onDownload()
         QString url = QString("http://%1:%2/api/FileOp/PostGetTemplateFiles?"
                                             "templateKey=%3").arg(IP).arg(Port).arg(downloadKey);
         QByteArray res = NetworkHelper::sharedInstance()->postRequest(url);
+
         if(res.length() == 0)
         {
             recordResult(QString("%1,%2").arg(TRANSTAG::DOWNLOAD_FAILED).arg(QString::fromLocal8Bit("获取文件列表失败")));
@@ -239,6 +241,7 @@ void FunctionHelper::onDownload()
 #else
                 QString downloadPath = QCoreApplication::applicationDirPath() + "\\download\\"+ downloadKey;
 #endif
+
                 createFullDir(downloadPath);
                 for(int i = 0 ;i < ja.count(); i++)
                 {
@@ -274,6 +277,11 @@ void FunctionHelper::onDownload()
                 recordResult(QString("%1,%2").arg(TRANSTAG::DOWNLOAD_OK).arg(downloadPath));
 
             }
+        }
+        else
+        {
+            recordResult(QString("%1,%2").arg(TRANSTAG::DOWNLOAD_FAILED).arg(QString::fromLocal8Bit("下载JSON解析失败！")));
+            qWarning()<<QString::fromLocal8Bit("下载JSON解析失败！");
         }
     } catch (...) {
         qWarning()<<QString::fromLocal8Bit("onDownload出现异常");
@@ -361,7 +369,39 @@ void FunctionHelper::createFullDir(QString path)
  */
 bool FunctionHelper::downLoadFile(QString url, QString dst)
 {
+    // 超时时间30S
+    int timeout = 30000;
 
+    QFile f(dst);
+    // 创建下载文件
+    if (!f.open(QIODevice::WriteOnly)) {
+        return false;
+    }
+    QNetworkAccessManager m;
+    QNetworkRequest req;
+    req.setUrl(QUrl(url));
+    QNetworkReply *reply = m.get(req);
+    QEventLoop loop;
+    QTimer t;
+    QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    QObject::connect(reply, &QNetworkReply::downloadProgress,
+                        [=, &f, &t](){
+           f.write(reply->readAll());
+           if (t.isActive()) {
+               t.start(timeout);
+           }
+    });
+    if (timeout > 0) {
+           QObject::connect(&t, &QTimer::timeout, &loop, &QEventLoop::quit);
+           t.start(timeout);
+    }
+    loop.exec();
+    if (reply->error() != QNetworkReply::NoError) {
+           return false;
+    }
+   f.close();
+   reply->deleteLater();
+   return true;
 }
 
 /**
