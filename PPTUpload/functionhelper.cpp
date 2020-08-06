@@ -9,6 +9,7 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QTimer>
 
 FunctionHelper *FunctionHelper::m_Instance = NULL;
 
@@ -18,6 +19,7 @@ FunctionHelper::FunctionHelper(QObject *parent) : QObject(parent)
     Port = "";
     pptPath = "";
     pptKey = "";
+    timerID = 0;
 }
 
 /**
@@ -119,6 +121,8 @@ void FunctionHelper::startFunction(char* argv[])
             exit(-1);
         }
         recordResult(QString("%1").arg(INFO::UPLOAD_OK));
+        // 开启定时器
+        startDownloadPPTTimer();
     }
     catch(...)
     {
@@ -149,6 +153,168 @@ void FunctionHelper::createOKFIN()
 }
 
 /**
+ * @brief 开启下载定时器
+ */
+void FunctionHelper::startDownloadPPTTimer()
+{
+    timerID = startTimer(2000);
+}
+
+/**
+ * @brief 开始下载
+ */
+void FunctionHelper::download()
+{
+    try {
+        qDebug()<<QString::fromLocal8Bit("------- 开始下载 -------");
+        killTimer(timerID);
+        timerID = 0;
+#ifdef Q_OS_MACOS
+        QString downloadFolder = QCoreApplication::applicationDirPath()+"/download/"+pptKey;
+#else
+        QString downloadFolder = QCoreApplication::applicationDirPath()+"\\download\\"+pptKey;
+#endif
+        createFullDir(downloadFolder);
+        qDebug()<<QString::fromLocal8Bit("------- 创建完下载目录 -------");
+        bool downloadOK = false;
+        // 每个文件下载三次
+        for( int i = 0; i < 3; i++)
+        {
+            qDebug()<<QString::fromLocal8Bit("------- 获取JPG路径 -------");
+            QString url = QString("http://%1:%2/api/FileOp/PostGetConvertedJpg?fileKey=%3")
+                    .arg(IP).arg(Port).arg(pptKey);
+            QByteArray res = NetworkHelper::sharedInstance()->postRequest(url);
+            QJsonParseError error;
+            QJsonDocument doc = QJsonDocument::fromJson(res,&error);
+            if(error.error == QJsonParseError::NoError)
+            {
+                QJsonObject obj = doc.object();
+                if(obj["code"].toInt() != 200)
+                {
+                    continue;
+                }
+                else
+                {
+                    QJsonArray ja = obj["result"].toArray();
+                    if(ja.count() > 0)
+                    {
+                        int downloadsum = 0;
+                        for(int i = 1; i <= ja.count(); i++)
+                        {
+                            QString s = ja.at(i - 1).toString();
+                            QString url = QString("http://%1:%2//%3").arg(IP).arg(Port).arg(s);
+                            // 开始下载
+                            // 超时时间30S
+                            int timeout = 30000;
+#ifdef Q_OS_MACOS
+                            QString dst = QString("%1/slide%2.jpg").arg(downloadFolder).arg(i);
+#else
+                            QString dst = QString("%1\\slide%2.jpg").arg(downloadFolder).arg(i);
+#endif
+                            QFile f(dst);
+
+                            // 创建下载文件
+                            if (!f.open(QIODevice::WriteOnly)) {
+                                qWarning()<<QString::fromLocal8Bit("创建或打开下载文件失败：")<<dst;
+                                f.close();
+                                continue;
+                            }
+                            QNetworkAccessManager m;
+                            QNetworkRequest req;
+                            req.setUrl(QUrl(url));
+                            QNetworkReply *reply = m.get(req);
+                            QEventLoop loop;
+                            QTimer t;
+                            QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+                            QObject::connect(reply, &QNetworkReply::readyRead,
+                                                [=, &f, &t](){
+                                   f.write(reply->readAll());
+                                   f.flush();
+                                   if (t.isActive()) {
+                                       t.start(timeout);
+                                   }
+                            });
+                            if (timeout > 0) {
+                                   QObject::connect(&t, &QTimer::timeout, &loop, &QEventLoop::quit);
+                                   t.start(timeout);
+                            }
+                            loop.exec();
+                            if (reply->error() != QNetworkReply::NoError) {
+                                f.close();
+                                qWarning()<<QString::fromLocal8Bit("下载文件网络失败：")<<QString::fromLocal8Bit(reply->errorString().toUtf8());
+                                continue;
+                            }
+                           f.close();
+                           downloadsum ++;
+                           reply->deleteLater();
+                        }
+                        if(downloadsum == ja.count())
+                        {
+                            downloadOK = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        if(downloadOK)
+            recordResult(QString("%1,%2").arg(INFO::DOWNLOAD_OK).arg(downloadFolder));
+        qDebug()<<QString::fromLocal8Bit("------- 关闭程序 -------");
+        exit(0);
+    } catch (...) {
+        qWarning()<<QString::fromLocal8Bit("下载文件出现异常");
+        exit(-1);
+    }
+}
+
+/**
+ * @brief 创建下载文件夹
+ * @param 文件夹路径
+ */
+void FunctionHelper::createFullDir(QString path)
+{
+    QFile downloadFile(path);
+    if(!downloadFile.exists())
+    {
+#ifdef Q_OS_MACOS
+        QString dirPath = path;
+        QStringList pathList = dirPath.split('/');
+        if(pathList.length() > 1)
+        {
+            QString path = pathList[0];
+            for (int i = 1;i < pathList.count();i++)
+            {
+                path.append(QString("/%1").arg(pathList.at(i)));
+                QDir dir(path);
+
+                if(!dir.exists())
+                {
+                    dir.mkpath(path);
+                }
+            }
+        }
+#else
+        QString dirPath = path.left(path.lastIndexOf('\\'));
+        QStringList pathList = dirPath.split('\\');
+        if(pathList.length() > 1)
+        {
+            QString path = pathList[0];
+            for (int i = 1;i < pathList.count();i++)
+            {
+                path.append(QString("\\%1").arg(pathList.at(i)));
+                QDir dir(path);
+                if(!dir.exists())
+                {
+                    dir.mkpath(path);
+                }
+            }
+        }
+#endif
+    }
+    downloadFile.close();
+}
+
+/**
  * @brief 记录日志
  * @param 内容
  */
@@ -171,5 +337,18 @@ void FunctionHelper::recordResult(QString res)
         resFile.close();
     } catch (...) {
         qWarning()<<QString::fromLocal8Bit("recordResult出现异常");
+    }
+}
+
+/**
+ * @brief 定时器事件
+ * @param event
+ */
+void FunctionHelper::timerEvent(QTimerEvent *event)
+{
+    if(event->timerId() == timerID)
+    {
+        // 开始下载
+        download();
     }
 }

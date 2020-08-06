@@ -28,8 +28,15 @@ private:
     QString Port;                                               // 端口号
     QString pptPath;                                            // PPT文件
     QString pptKey;                                             // 下载PPT文件时的标识
+    int timerID;                                                // 定时器ID
 
     void createOKFIN();                                         // 创建ok.fin文件
+    void startDownloadPPTTimer();                               // 下载PPT图片定时器
+    void createFullDir(QString path);                           // 创建下载文件夹
+    void download();                                            // 开始下载
+
+protected:
+    void timerEvent(QTimerEvent *event) override;
 signals:
 
 };
