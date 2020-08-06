@@ -114,7 +114,11 @@ void FunctionHelper::startActionTimer()
 void FunctionHelper::recordResult(QString res)
 {
     try {
+#ifdef Q_OS_MACOS
         QString filePath = QCoreApplication::applicationDirPath() + "/result.res";
+#else
+        QString filePath = QCoreApplication::applicationDirPath() + "\\result.res";
+#endif
         QFile resFile(filePath);
         if(!resFile.open(QIODevice::Text|QFile::ReadWrite))
         {

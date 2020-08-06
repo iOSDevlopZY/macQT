@@ -18,7 +18,8 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         functionhelper.cpp \
         inihelper.cpp \
-        main.cpp
+        main.cpp \
+        networkhelper.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -27,4 +28,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     functionhelper.h \
-    inihelper.h
+    inihelper.h \
+    networkhelper.h
