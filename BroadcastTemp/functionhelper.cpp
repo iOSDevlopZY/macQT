@@ -379,6 +379,7 @@ bool FunctionHelper::downLoadFile(QString url, QString dst)
 
     // 创建下载文件
     if (!f.open(QIODevice::WriteOnly)) {
+        qWarning()<<QString::fromLocal8Bit("创建或打开下载文件失败：")<<dst;
         f.close();
         return false;
     }
@@ -404,6 +405,7 @@ bool FunctionHelper::downLoadFile(QString url, QString dst)
     loop.exec();
     if (reply->error() != QNetworkReply::NoError) {
         f.close();
+        qWarning()<<QString::fromLocal8Bit("下载文件网络失败：")<<reply->errorString();
         return false;
     }
    f.close();
