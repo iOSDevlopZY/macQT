@@ -405,7 +405,7 @@ bool FunctionHelper::downLoadFile(QString url, QString dst)
     loop.exec();
     if (reply->error() != QNetworkReply::NoError) {
         f.close();
-        qWarning()<<QString::fromLocal8Bit("下载文件网络失败：")<<reply->errorString();
+        qWarning()<<QString::fromLocal8Bit("下载文件网络失败：")<<QString::fromLocal8Bit(reply->errorString().toUtf8());
         return false;
     }
    f.close();
