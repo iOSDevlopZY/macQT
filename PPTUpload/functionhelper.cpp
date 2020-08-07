@@ -10,6 +10,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QTimer>
+#include <QThread>
 
 FunctionHelper *FunctionHelper::m_Instance = NULL;
 
@@ -191,6 +192,7 @@ void FunctionHelper::download()
                 QJsonObject obj = doc.object();
                 if(obj["code"].toInt() != 200)
                 {
+                    QThread::sleep(2000);
                     continue;
                 }
                 else
@@ -252,6 +254,10 @@ void FunctionHelper::download()
                         {
                             downloadOK = true;
                             break;
+                        }
+                        else
+                        {
+                            QThread::sleep(2000);
                         }
                     }
                 }
