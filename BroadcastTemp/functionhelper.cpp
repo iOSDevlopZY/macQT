@@ -54,9 +54,7 @@ void FunctionHelper::startFunction(char *argv[])
     qDebug()<<QString::fromLocal8Bit("----------- 开始 -----------");
     try {
         // 读取IP和端口信息
-        QString filePath = QCoreApplication::applicationDirPath()+"/URL.ini";
-        IP = IniHelper::shareInstance()->readIniInfo(filePath,"Info/IP");
-        Port = IniHelper::shareInstance()->readIniInfo(filePath,"Info/Port");
+        getOMSUrlInfo();
         qDebug()<<QString::fromLocal8Bit("----------- 读取IP和端口号 -----------");
         qDebug()<<QString(">>> IP:%1,Port:%2").arg(IP).arg(Port);
         // 解析命令行参数
@@ -415,6 +413,14 @@ bool FunctionHelper::downLoadFile(QString url, QString dst)
    f.close();
    reply->deleteLater();
    return true;
+}
+
+/**
+ * @brief 获取OMS接口地址信息
+ */
+void FunctionHelper::getOMSUrlInfo()
+{
+
 }
 
 /**

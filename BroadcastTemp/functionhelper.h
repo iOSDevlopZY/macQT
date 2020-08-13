@@ -45,6 +45,7 @@ private:
     QFileInfoList getFiles(QString dirPath);             // 获取文件夹下所有文件
     void createFullDir(QString path);                    // 创建下载文件夹
     bool downLoadFile(QString url, QString dst);         // 下载文件
+    void getOMSUrlInfo();                                // 获取OMS接口地址
     static void Release();                               // 释放指针
 
 protected:
