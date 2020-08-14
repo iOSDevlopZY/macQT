@@ -94,6 +94,37 @@ QByteArray NetworkHelper::postRequest(QString urlStr)
 }
 
 /**
+ * @brief POST请求，带参数
+ * @param urlStr
+ * @param parm
+ * @return
+ */
+QByteArray NetworkHelper::postRequestWithParam(QString urlStr, QString parm)
+{
+    QUrl url(urlStr);
+    QNetworkRequest request;
+    request.setUrl(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+
+    QByteArray postArray;
+    postArray.append(parm);
+
+    request.setHeader(QNetworkRequest::ContentLengthHeader,postArray.length());
+
+    QNetworkReply *Reply = netManager->post(request, postArray);
+    connect (Reply,SIGNAL(error(QNetworkReply::NetworkError)),this,SLOT(netError(QNetworkReply::NetworkError)));
+    QEventLoop eventLoop;
+    connect(netManager, SIGNAL(finished(QNetworkReply*)), &eventLoop, SLOT(quit()));
+    eventLoop.exec();
+    disconnect(netManager, SIGNAL(finished(QNetworkReply*)), &eventLoop, SLOT(quit()));
+
+    QByteArray data = Reply->readAll();
+    Reply->deleteLater();
+
+    return data;
+}
+
+/**
  * @brief 请求出现错误
  * @param 错误
  */

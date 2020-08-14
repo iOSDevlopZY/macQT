@@ -15,6 +15,7 @@ public:
     static NetworkHelper *sharedInstance();                       // 单实例
     QByteArray uploadFile(QString urlStr, QByteArray fileByte);   // 上传文件
     QByteArray postRequest(QString urlStr);                       // POST请求
+    QByteArray postRequestWithParam(QString urlStr,QString parm); // POST请求,带参数
 
 private:
     static NetworkHelper *m_Instance;

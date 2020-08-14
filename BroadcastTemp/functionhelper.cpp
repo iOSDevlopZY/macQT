@@ -163,7 +163,7 @@ void FunctionHelper::onUpload()
                 if(uploadFile.open(QIODevice::ReadOnly))
                 {
                     QByteArray ba = uploadFile.readAll();
-                    QString url = QString("http://%1:%2/api/FileOp/PostUploadTemplate?"
+                    QString url = QString("%1:%2/api/FileOp/PostUploadTemplate?"
                                           "templateKey=%3&filename=%4").arg(IP).arg(Port).arg(guid).arg(info.filePath().remove(0, uploadSrcDir.length()));
                     // 每个文件有三次上传机会
                     for(int i = 0;i < 3; i++)
@@ -218,7 +218,7 @@ void FunctionHelper::onDownload()
 {
     try
     {
-        QString url = QString("http://%1:%2/api/FileOp/PostGetTemplateFiles?"
+        QString url = QString("%1:%2/api/FileOp/PostGetTemplateFiles?"
                                             "templateKey=%3").arg(IP).arg(Port).arg(downloadKey);
         QByteArray res = NetworkHelper::sharedInstance()->postRequest(url);
 
@@ -251,7 +251,7 @@ void FunctionHelper::onDownload()
                     QJsonObject obj = ja.at(i).toObject();
                     QString filePath = obj["path"].toString();
                     QString fileName = obj["file"].toString();
-                    QString url = QString("http://%1:%2/%3").arg(IP).arg(Port).arg(filePath);
+                    QString url = QString("%1:%2/%3").arg(IP).arg(Port).arg(filePath);
 #ifdef Q_OS_MACOS
                     QString dst = QString("%1/%2").arg(downloadPath).arg(fileName.replace("\\","/"));
 
@@ -420,7 +420,22 @@ bool FunctionHelper::downLoadFile(QString url, QString dst)
  */
 void FunctionHelper::getOMSUrlInfo()
 {
-
+    QString url = "http://121.42.48.71:8021/cms-api/LanWorkStation/GetWSCustomdata";
+    QString param = "wsJid=__workstation_b8975a1489c1@im.sino-med.net&customKey=WebApiUrl";
+    QByteArray res = NetworkHelper::sharedInstance()->postRequestWithParam(url,param);
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(res,&error);
+    if(error.error == QJsonParseError::NoError)
+    {
+        QJsonObject obj = doc.object();
+        QString data = obj["data"].toString();
+        QStringList dataList = data.split(":");
+        if(dataList.count() == 3)
+        {
+            IP = QString("%1:%2").arg(dataList[0]).arg(dataList[1]);
+            Port = dataList[2];
+        }
+    }
 }
 
 /**

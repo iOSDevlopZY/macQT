@@ -57,9 +57,7 @@ void FunctionHelper::startFunction(char* argv[])
 
     try {
         // 读取IP和端口信息
-        QString filePath = QCoreApplication::applicationDirPath()+"/URL.ini";
-        IP = IniHelper::shareInstance(  )->readIniInfo(filePath,"Info/IP");
-        Port = IniHelper::shareInstance()->readIniInfo(filePath,"Info/Port");
+        getOMSUrlInfo();
         qDebug()<<QString::fromLocal8Bit("----------- 读取IP和端口号 -----------");
         qDebug()<<QString(">>> IP:%1,Port:%2").arg(IP).arg(Port);
 
@@ -94,7 +92,7 @@ void FunctionHelper::startFunction(char* argv[])
             QString fileName = fi.fileName();
 
             // 正式上传
-            QString url = QString("http://%1:%2/api/FileOp/PostUploadPPTFile?fileName=%3")
+            QString url = QString("%1:%2/api/FileOp/PostUploadPPTFile?fileName=%3")
                     .arg(IP).arg(Port).arg(fileName);
             QByteArray res = NetworkHelper::sharedInstance()->uploadFile(url,fileData);
             QJsonParseError error;
@@ -182,7 +180,7 @@ void FunctionHelper::download()
         for( int i = 0; i < 3; i++)
         {
             qDebug()<<QString::fromLocal8Bit("------- 获取JPG路径 -------");
-            QString url = QString("http://%1:%2/api/FileOp/PostGetConvertedJpg?fileKey=%3")
+            QString url = QString("%1:%2/api/FileOp/PostGetConvertedJpg?fileKey=%3")
                     .arg(IP).arg(Port).arg(pptKey);
             QByteArray res = NetworkHelper::sharedInstance()->postRequest(url);
             QJsonParseError error;
@@ -206,7 +204,7 @@ void FunctionHelper::download()
                         for(int i = 1; i <= ja.count(); i++)
                         {
                             QString s = ja.at(i - 1).toString();
-                            QString url = QString("http://%1:%2//%3").arg(IP).arg(Port).arg(s);
+                            QString url = QString("%1:%2//%3").arg(IP).arg(Port).arg(s);
                             // 开始下载
                             // 超时时间30S
                             int timeout = 30000;
@@ -350,6 +348,29 @@ void FunctionHelper::recordResult(QString res)
     }
 }
 
+/**
+ * @brief 获取OMS接口地址信息
+ */
+void FunctionHelper::getOMSUrlInfo()
+{
+    QString url = "http://121.42.48.71:8021/cms-api/LanWorkStation/GetWSCustomdata";
+    QString param = "wsJid=__workstation_b8975a1489c1@im.sino-med.net&customKey=WebApiUrl";
+    QByteArray res = NetworkHelper::sharedInstance()->postRequestWithParam(url,param);
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(res,&error);
+    if(error.error == QJsonParseError::NoError)
+    {
+        QJsonObject obj = doc.object();
+        QString data = obj["data"].toString();
+
+        QStringList dataList = data.split(":");
+        if(dataList.count() == 3)
+        {
+            IP = QString("%1:%2").arg(dataList[0]).arg(dataList[1]);
+            Port = dataList[2];
+        }
+    }
+}
 /**
  * @brief 定时器事件
  * @param event

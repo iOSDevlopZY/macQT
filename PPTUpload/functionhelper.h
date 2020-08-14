@@ -34,6 +34,7 @@ private:
     void startDownloadPPTTimer();                               // 下载PPT图片定时器
     void createFullDir(QString path);                           // 创建下载文件夹
     void download();                                            // 开始下载
+    void getOMSUrlInfo();                                       // 获取OMS接口地址
 
 protected:
     void timerEvent(QTimerEvent *event) override;
