@@ -420,20 +420,37 @@ bool FunctionHelper::downLoadFile(QString url, QString dst)
  */
 void FunctionHelper::getOMSUrlInfo()
 {
+    QString param = "";
+    if(isOfficalEnviorment())
+    {
+        param = "wsJid=__workstation_b8975a1489c1@im.sino-med.net&customKey=Configuration";
+    }
+    else
+    {
+        param = "wsJid=__workstation_b8975a1489c1@im.sino-med.net&customKey=ConfigurationTest";
+    }
     QString url = "http://121.42.48.71:8021/cms-api/LanWorkStation/GetWSCustomdata";
-    QString param = "wsJid=__workstation_b8975a1489c1@im.sino-med.net&customKey=WebApiUrl";
+
     QByteArray res = NetworkHelper::sharedInstance()->postRequestWithParam(url,param);
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(res,&error);
     if(error.error == QJsonParseError::NoError)
     {
         QJsonObject obj = doc.object();
-        QString data = obj["data"].toString();
-        QStringList dataList = data.split(":");
-        if(dataList.count() == 3)
+
+        QString dataStr = obj["data"].toString();
+
+        QJsonDocument doc1 = QJsonDocument::fromJson(dataStr.toUtf8(),&error);
+        if(error.error == QJsonParseError::NoError)
         {
-            IP = QString("%1:%2").arg(dataList[0]).arg(dataList[1]);
-            Port = dataList[2];
+            QJsonObject dataObj = doc1.object();
+            QString dataStr = dataObj["ConvertPptUrl"].toString();
+            QStringList dataList = dataStr.split(":");
+            if(dataList.count() == 3)
+            {
+                IP = QString("%1:%2").arg(dataList[0]).arg(dataList[1]);
+                Port = dataList[2];
+            }
         }
     }
 }
@@ -450,6 +467,44 @@ void FunctionHelper::Release()
     }
 }
 
+/**
+ * @brief 判断是否为正式环境
+ * @return
+ */
+bool FunctionHelper::isOfficalEnviorment()
+{
+#ifdef Q_OS_MACOS
+    QString flagFile = QCoreApplication::applicationDirPath()+"/flag.txt";
+#else
+    QString flagFile = QCoreApplication::applicationDirPath()+"\\flag.txt";
+#endif
+    // 如果文件不存在或者无法打开，则默认为测试环境
+    QFile file(flagFile);
+    if(!file.exists())
+    {
+        qWarning()<<QString::fromLocal8Bit("正式测试环境标识文件不存在！");
+        file.close();
+        return false;
+    }
+    if(!file.open(QIODevice::ReadOnly))
+    {
+        qWarning()<<QString::fromLocal8Bit("正式测试环境标识文件打不开！");
+        file.close();
+        return false;
+    }
+    QString str(file.readAll());
+    file.close();
+    if(str == "True")
+    {
+        qDebug()<<QString::fromLocal8Bit("检测到为正式环境");
+        return true;
+    }
+    else
+    {
+        qDebug()<<QString::fromLocal8Bit("检测到为测试环境");
+        return false;
+    }
+}
 /**
  * @brief 定时器事件
  * @param event

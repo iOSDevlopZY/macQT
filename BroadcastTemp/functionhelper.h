@@ -47,6 +47,7 @@ private:
     bool downLoadFile(QString url, QString dst);         // 下载文件
     void getOMSUrlInfo();                                // 获取OMS接口地址
     static void Release();                               // 释放指针
+    bool isOfficalEnviorment();                          // 判断是否为正式环境
 
 protected:
     void timerEvent(QTimerEvent *event) override;
