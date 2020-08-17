@@ -24,6 +24,10 @@ LoginDialog::LoginDialog(QWidget *parent) : QDialog(parent)
 
     m_Drag = false;
     PlatformCode = "";
+    isOfficalEnv = false;
+    anymedPrefixURL = "";
+    choosePlatformURL = "";
+
     initTool();
     // 设置位图
     setMap();
@@ -132,17 +136,49 @@ void LoginDialog::loginClick()
 {
     if(userNameEdit->entryEdit->text().length() > 0 && userPasswdEdit->entryEdit->text().length() > 0 )
     {
+        if(userNameEdit->entryEdit->text().toLower().startsWith("mdcbctest"))
+            isOfficalEnv = false;
+        else
+            isOfficalEnv = true;
+
             loginLabel->setPixmap(QPixmap(":/images/login"));
-//            QString url = iniHelper->readWebUrl()+"/user/assistantLogin";
-//            QString url = "http://27.221.110.74:8810/user/assistantLogin";
-//            QString url = "http://192.168.2.93:8809/user/assistantLogin";
-            QString url = "http://39.104.135.186:8909/user/assistantLogin";
-            //2020-06-21 修改為正式地址；
-//            QString url = "http://27.221.110.74:8810/user/assistantLogin";
-            qDebug()<<QString::fromLocal8Bit("读取的URL为：")<<url;
+            QString param = "";
+            QString urlStr = "";
+               if(isOfficalEnv)
+               {
+                   param = "wsJid=__workstation_b8975a1489c1@im.sino-med.net&customKey=Configuration";
+               }
+               else
+               {
+                   param = "wsJid=__workstation_b8975a1489c1@im.sino-med.net&customKey=ConfigurationTest";
+               }
+               QString url = "http://121.42.48.71:8021/cms-api/LanWorkStation/GetWSCustomdata";
+
+               QByteArray res = netHelper->postRequestWithParam(url,param);
+               QJsonParseError error;
+               QJsonDocument doc = QJsonDocument::fromJson(res,&error);
+               if(error.error == QJsonParseError::NoError)
+               {
+                   QJsonObject obj = doc.object();
+
+                   QString dataStr = obj["data"].toString();
+
+                   QJsonDocument doc1 = QJsonDocument::fromJson(dataStr.toUtf8(),&error);
+                   if(error.error == QJsonParseError::NoError)
+                   {
+                       QJsonObject dataObj = doc1.object();
+                       urlStr = dataObj["LoginUrl"].toString();
+                       anymedPrefixURL = dataObj["GetPlatformNumUrl"].toString();
+                       choosePlatformURL = dataObj["SelectPlatformUrl"].toString();
+                       qDebug()<<QString::fromLocal8Bit("读取的登录接口为：")<<urlStr;
+                       qDebug()<<QString::fromLocal8Bit("读取的平台接口前缀为：")<<anymedPrefixURL;
+                       qDebug()<<QString::fromLocal8Bit("读取的选择平台网页接口为：")<<choosePlatformURL;
+                   }
+               }
+            qDebug()<<QString::fromLocal8Bit("读取的URL为：")<<urlStr;
             QString parm = QString("name=%1&password=%2").arg(userNameEdit->entryEdit->text()).arg(userPasswdEdit->entryEdit->text());
-            qDebug()<<QString::fromLocal8Bit("传入的参数：")<<url;
-            getLoginInfo(url,parm);
+            qDebug()<<QString::fromLocal8Bit("传入的参数：")<<urlStr;
+            getLoginInfo(urlStr,parm);
     }
     else
     {
@@ -237,7 +273,7 @@ void LoginDialog::getLoginInfo(QString urlStr,QString Parm)
     {
         // 获取URL
         QString url = QString("%1/api/AnymedApi/GetModulesBySubPlatform?UserJID=%2&PlatformCode=%3")
-                .arg(MEDAPI_TEST).arg(UserJid).arg(PlatformCode);
+                .arg(anymedPrefixURL).arg(UserJid).arg(PlatformCode);
         QByteArray dataArray = netHelper->get(url);
         QJsonParseError json_error;
         QJsonDocument jsonDoc(QJsonDocument::fromJson(dataArray, &json_error));
@@ -268,9 +304,7 @@ void LoginDialog::getLoginInfo(QString urlStr,QString Parm)
     {
         // 弹出选择平台对话框
         ChoosePlatformDialog *chooseDialog = new ChoosePlatformDialog(this);
-        QString webURL = QString("https://qiluceshi1.anymed.cn:6224/new-choosepage2.html?UserJID=%1").arg(UserJid);
-        //2020-06-21 修改为正式地址；
-//        QString webURL = QString("https://www.sino-med.net/htmlPage/new-choosepage2.html?UserJID=%1").arg(UserJid);
+        QString webURL = QString("%1?UserJID=%2").arg(choosePlatformURL).arg(UserJid);
 
         chooseDialog->setWebUrl(webURL);
         connect (chooseDialog,SIGNAL(sureClick()),this,SLOT(startApp()));
@@ -287,6 +321,17 @@ void LoginDialog::getLoginInfo(QString urlStr,QString Parm)
  */
 void LoginDialog::startApp()
 {
+    // 记录当前环境
+    QString flagPath = QCoreApplication::applicationDirPath()+"/flag.txt";
+    QFile file(flagPath);
+    if(file.open(QIODevice::ReadWrite|QIODevice::Text))
+    {
+        if(isOfficalEnv)
+            file.write("True");
+        else
+            file.write("False");
+    }
+    file.close();
     // 成功才能启动程序
     startupApplication();
 }
@@ -350,11 +395,6 @@ void LoginDialog::startupApplication()
     this->accept();
 }
 
-/**
- * @brief 显示错误信息
- * @param 标题
- * @param 消息
- */
 void LoginDialog::ShowCriticalMessage(QString title, QString message)
 {
     QMessageBox warnMsgBox(QMessageBox::Critical,title,message);
@@ -397,9 +437,8 @@ void LoginDialog::closeClick()
 bool LoginDialog::isDirectLogin(QString userJID)
 {
     // 获取平台数量
-    QString url = QString("%1/api/AnymedApi/GetMySubPlatform?UserJID=%2").arg(MEDAPI_TEST).arg(userJID);
+    QString url = QString("%1/api/AnymedApi/GetMySubPlatform?UserJID=%2").arg(anymedPrefixURL).arg(userJID);
     QByteArray dataArray = netHelper->get(url);
-
     QJsonParseError json_error;
     QJsonDocument jsonDoc(QJsonDocument::fromJson(dataArray, &json_error));
     if(json_error.error != QJsonParseError::NoError)
@@ -429,7 +468,6 @@ bool LoginDialog::isDirectLogin(QString userJID)
     }
     return false;
 }
-
 /**
  * @brief 界面布局事件
  * @param QResizeEvent
