@@ -394,7 +394,38 @@ void FunctionHelper::getOMSUrlInfo()
  */
 bool FunctionHelper::isOfficalEnviorment()
 {
-    return false;
+#ifdef Q_OS_MACOS
+    QString flagFile = QCoreApplication::applicationDirPath()+"/flag.txt";
+#else
+    QString flagFile = QCoreApplication::applicationDirPath()+"\\flag.txt";
+#endif
+    // 如果文件不存在或者无法打开，则默认为测试环境
+    QFile file(flagFile);
+    if(!file.exists())
+    {
+        qWarning()<<QString::fromLocal8Bit("正式测试环境标识文件不存在！");
+        file.close();
+        return false;
+    }
+    if(!file.open(QIODevice::ReadOnly))
+    {
+        qWarning()<<QString::fromLocal8Bit("正式测试环境标识文件打不开！");
+        file.close();
+        return false;
+    }
+    QString str(file.readAll());
+    file.close();
+    if(str == "True")
+    {
+        qDebug()<<QString::fromLocal8Bit("检测到为正式环境");
+        return true;
+    }
+    else
+    {
+        qDebug()<<QString::fromLocal8Bit("检测到为测试环境");
+        return false;
+    }
+
 }
 /**
  * @brief 定时器事件
