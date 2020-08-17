@@ -35,7 +35,7 @@ private:
     void createFullDir(QString path);                           // 创建下载文件夹
     void download();                                            // 开始下载
     void getOMSUrlInfo();                                       // 获取OMS接口地址
-
+    bool isOfficalEnviorment();                                 // 判断是正式还是测试环境
 protected:
     void timerEvent(QTimerEvent *event) override;
 signals:

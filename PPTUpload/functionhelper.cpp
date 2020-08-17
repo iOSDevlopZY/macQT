@@ -353,23 +353,48 @@ void FunctionHelper::recordResult(QString res)
  */
 void FunctionHelper::getOMSUrlInfo()
 {
+    QString param = "";
+    if(isOfficalEnviorment())
+    {
+        param = "wsJid=__workstation_b8975a1489c1@im.sino-med.net&customKey=Configuration";
+    }
+    else
+    {
+        param = "wsJid=__workstation_b8975a1489c1@im.sino-med.net&customKey=ConfigurationTest";
+    }
     QString url = "http://121.42.48.71:8021/cms-api/LanWorkStation/GetWSCustomdata";
-    QString param = "wsJid=__workstation_b8975a1489c1@im.sino-med.net&customKey=WebApiUrl";
+
     QByteArray res = NetworkHelper::sharedInstance()->postRequestWithParam(url,param);
     QJsonParseError error;
     QJsonDocument doc = QJsonDocument::fromJson(res,&error);
     if(error.error == QJsonParseError::NoError)
     {
         QJsonObject obj = doc.object();
-        QString data = obj["data"].toString();
 
-        QStringList dataList = data.split(":");
-        if(dataList.count() == 3)
+        QString dataStr = obj["data"].toString();
+
+        QJsonDocument doc1 = QJsonDocument::fromJson(dataStr.toUtf8(),&error);
+        if(error.error == QJsonParseError::NoError)
         {
-            IP = QString("%1:%2").arg(dataList[0]).arg(dataList[1]);
-            Port = dataList[2];
+            QJsonObject dataObj = doc1.object();
+            QString dataStr = dataObj["ConvertPptUrl"].toString();
+            QStringList dataList = dataStr.split(":");
+            if(dataList.count() == 3)
+            {
+                IP = QString("%1:%2").arg(dataList[0]).arg(dataList[1]);
+                Port = dataList[2];
+            }
         }
     }
+}
+
+/**
+ * @brief 判断是否为正式环境
+ * @return
+ */
+bool FunctionHelper::isOfficalEnviorment()
+{
+    return false;
 }
 /**
  * @brief 定时器事件
