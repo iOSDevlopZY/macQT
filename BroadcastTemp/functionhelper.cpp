@@ -53,6 +53,8 @@ void FunctionHelper::startFunction(char *argv[])
 {
     qDebug()<<QString::fromLocal8Bit("----------- 开始 -----------");
     try {
+        // 读取用户名信息
+        readUserInfo();
         // 读取IP和端口信息
         getOMSUrlInfo();
         qDebug()<<QString::fromLocal8Bit("----------- 读取IP和端口号 -----------");
@@ -163,8 +165,9 @@ void FunctionHelper::onUpload()
                 if(uploadFile.open(QIODevice::ReadOnly))
                 {
                     QByteArray ba = uploadFile.readAll();
-                    QString url = QString("%1:%2/api/FileOp/PostUploadTemplate?"
-                                          "templateKey=%3&filename=%4").arg(IP).arg(Port).arg(guid).arg(info.filePath().remove(0, uploadSrcDir.length()));
+                    QString url = QString("%1:%2/api/FileOp/PostUploadTemplateReMaster?"
+                                          "templateKey=%3&filename=%4&userName=%5").arg(IP)
+                            .arg(Port).arg(guid).arg(info.filePath().remove(0, uploadSrcDir.length())).arg(userName);
                     // 每个文件有三次上传机会
                     for(int i = 0;i < 3; i++)
                     {
@@ -218,8 +221,8 @@ void FunctionHelper::onDownload()
 {
     try
     {
-        QString url = QString("%1:%2/api/FileOp/PostGetTemplateFiles?"
-                                            "templateKey=%3").arg(IP).arg(Port).arg(downloadKey);
+        QString url = QString("%1:%2/api/FileOp/PostGetTemplateFilesReMaster?"
+                                            "templateKey=%3&userName=%4").arg(IP).arg(Port).arg(downloadKey).arg(userName);
         QByteArray res = NetworkHelper::sharedInstance()->postRequest(url);
 
         if(res.length() == 0)
@@ -413,6 +416,15 @@ bool FunctionHelper::downLoadFile(QString url, QString dst)
    f.close();
    reply->deleteLater();
    return true;
+}
+
+/**
+ * @brief 读取用户信息
+ */
+void FunctionHelper::readUserInfo()
+{
+    userName = IniHelper::shareInstance()->readLoginInfo("Login/Username");
+    qDebug()<<QString::fromLocal8Bit("读取的用户名为：")<<userName;
 }
 
 /**

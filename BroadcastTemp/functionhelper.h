@@ -36,6 +36,7 @@ private:
     ACTION action;                                       // 当前模式
     QString uploadSrcDir;                                // 上传文件夹路径
     QString downloadKey;                                 // 下载时KEY
+    QString userName;                                    // 登录用户名
     int timerID;                                         // 定时器
 
     void startActionTimer();                             // 开启定时器
@@ -48,6 +49,7 @@ private:
     void getOMSUrlInfo();                                // 获取OMS接口地址
     static void Release();                               // 释放指针
     bool isOfficalEnviorment();                          // 判断是否为正式环境
+    void readUserInfo();                                 // 读取用户信息
 
 protected:
     void timerEvent(QTimerEvent *event) override;

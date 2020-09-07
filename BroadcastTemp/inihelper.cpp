@@ -1,6 +1,7 @@
 #include "inihelper.h"
 #include <QSettings>
 #include <QDebug>
+#include <QCoreApplication>
 
 // 静态变量需要在类体的外面进行初始化
 IniHelper *IniHelper::m_Instance = NULL;
@@ -40,6 +41,26 @@ QString IniHelper::readIniInfo(QString file, QString key)
     QString value = setting->value(key).toString();
     delete  setting;
     return value;
+}
+
+/**
+ * @brief 读取登录用户名
+ * @param key
+ * @return
+ */
+QString IniHelper::readLoginInfo(QString key)
+{
+    QString res = "";
+
+    QString iniPath = QCoreApplication::applicationDirPath() +"/MedcareBroadcastLoginInfo.ini";
+
+    QSettings *IniSettings = new QSettings(iniPath, QSettings::IniFormat);
+
+    res = IniSettings->value(key).toString();
+
+    delete IniSettings;
+
+    return res;
 }
 
 /**
