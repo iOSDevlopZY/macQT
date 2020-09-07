@@ -21,6 +21,7 @@ FunctionHelper::FunctionHelper(QObject *parent) : QObject(parent)
     pptPath = "";
     pptKey = "";
     timerID = 0;
+
 }
 
 /**
@@ -52,6 +53,9 @@ void FunctionHelper::Release()
 void FunctionHelper::startFunction(char* argv[])
 {
     qDebug()<<QString::fromLocal8Bit("----------- 开始 -----------");
+    // 读取用户名信息
+    readUserInfo();
+
     // 创建ok.fin文件
     createOKFIN();
 
@@ -92,8 +96,8 @@ void FunctionHelper::startFunction(char* argv[])
             QString fileName = fi.fileName();
 
             // 正式上传
-            QString url = QString("%1:%2/api/FileOp/PostUploadPPTFile?fileName=%3")
-                    .arg(IP).arg(Port).arg(fileName);
+            QString url = QString("%1:%2/api/FileOp/PostUploadPPTFileReMaster?fileName=%3&userName=%4")
+                    .arg(IP).arg(Port).arg(fileName).arg(userName);
             QByteArray res = NetworkHelper::sharedInstance()->uploadFile(url,fileData);
             QJsonParseError error;
             QJsonDocument doc = QJsonDocument::fromJson(res,&error);
@@ -180,8 +184,8 @@ void FunctionHelper::download()
         for( int i = 0; i < 3; i++)
         {
             qDebug()<<QString::fromLocal8Bit("------- 获取JPG路径 -------");
-            QString url = QString("%1:%2/api/FileOp/PostGetConvertedJpg?fileKey=%3")
-                    .arg(IP).arg(Port).arg(pptKey);
+            QString url = QString("%1:%2/api/FileOp/PostGetConvertedJpgReMaster?fileKey=%3&userName=%4")
+                    .arg(IP).arg(Port).arg(pptKey).arg(userName);
             QByteArray res = NetworkHelper::sharedInstance()->postRequest(url);
             QJsonParseError error;
             QJsonDocument doc = QJsonDocument::fromJson(res,&error);
@@ -346,6 +350,14 @@ void FunctionHelper::recordResult(QString res)
     } catch (...) {
         qWarning()<<QString::fromLocal8Bit("recordResult出现异常");
     }
+}
+
+/**
+ * @brief 读取用户名
+ */
+void FunctionHelper::readUserInfo()
+{
+    userName = IniHelper::shareInstance()->readLoginInfo("Login/Username");
 }
 
 /**
