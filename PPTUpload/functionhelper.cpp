@@ -21,7 +21,6 @@ FunctionHelper::FunctionHelper(QObject *parent) : QObject(parent)
     pptPath = "";
     pptKey = "";
     timerID = 0;
-
 }
 
 /**
@@ -358,6 +357,7 @@ void FunctionHelper::recordResult(QString res)
 void FunctionHelper::readUserInfo()
 {
     userName = IniHelper::shareInstance()->readLoginInfo("Login/Username");
+    qDebug()<<QString::fromLocal8Bit("读取的用户名为：")<<userName;
 }
 
 /**
