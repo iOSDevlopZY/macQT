@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include "tcphelper.h"
+#include "msgboxhelper.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -15,7 +17,14 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private slots:
+    void on_listenBtn_clicked();
+    void on_stopListenBtn_clicked();
+    void newClientRecv(QString clientIP);
+
 private:
     Ui::MainWindow *ui;
+    TCPHelper *helper;
+    MsgBoxHelper *msgHelper;
 };
 #endif // MAINWINDOW_H

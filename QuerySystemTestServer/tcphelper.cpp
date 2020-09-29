@@ -24,6 +24,10 @@ TCPHelper::TCPHelper(QObject *parent) : QObject(parent)
     connect(connSocket,SIGNAL(stateChanged(QAbstractSocket::SocketState)),this,
             SLOT(socketStateChanged(QAbstractSocket::SocketState)));
     connect(connSocket, SIGNAL(readyRead()), this, SLOT(socketReadData()));
+
+    server = new QTcpServer();
+    server->setMaxPendingConnections(500);
+    connect(server,SIGNAL(newConnection()),this,SLOT(newConnectionComing()));
 }
 
 TCPHelper::~TCPHelper()
@@ -34,6 +38,13 @@ TCPHelper::~TCPHelper()
             connSocket->disconnectFromHost();
         connSocket->deleteLater();
     }
+    if(server)
+    {
+        if(server->isListening())
+            server->close();
+        server->deleteLater();
+    }
+    tcpSocketConnetList.clear();
 }
 
 /**
@@ -107,6 +118,24 @@ void TCPHelper::sendCmdToClient(QString data)
 }
 
 /**
+ * @brief 开启服务器监听
+ */
+bool TCPHelper::startServerListen(QString port)
+{
+    return server->listen(QHostAddress::Any,port.toInt());
+}
+
+/**
+ * @brief 停止服务端监听
+ */
+void TCPHelper::stopServerListen()
+{
+    if(server->isListening())
+        server->close();
+    tcpSocketConnetList.clear();
+}
+
+/**
  * @brief Socket接收数据
  */
 void TCPHelper::socketReadData()
@@ -125,6 +154,17 @@ void TCPHelper::socketReadData()
         QString dataStr(data2);
         emit socketRecvData(dataStr);
     }
+}
+
+/**
+ * @brief 有新客户端加入
+ * @param 客户端
+ */
+void TCPHelper::newConnectionComing()
+{
+    QTcpSocket *socket = server->nextPendingConnection();
+    tcpSocketConnetList.append(socket);
+    emit newClientConnected(socket->peerAddress().toString());
 }
 
 /**
@@ -160,3 +200,5 @@ void TCPHelper::socketStateChanged(QAbstractSocket::SocketState state)
     }
     emit socketIsConnect(isSocketConnect);
 }
+
+
