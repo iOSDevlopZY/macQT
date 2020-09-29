@@ -21,10 +21,15 @@ private slots:
     void on_listenBtn_clicked();
     void on_stopListenBtn_clicked();
     void newClientRecv(QString clientIP);
+    void newClientDisconnect(QString clientIP);
+    void newClientsocketRecvData(QString data);
+
 
 private:
     Ui::MainWindow *ui;
     TCPHelper *helper;
     MsgBoxHelper *msgHelper;
+
+    void sendSupportType();
 };
 #endif // MAINWINDOW_H

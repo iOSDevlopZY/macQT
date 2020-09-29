@@ -20,6 +20,7 @@ QByteArray  intToByte(int i)
 TCPHelper::TCPHelper(QObject *parent) : QObject(parent)
 {
     connSocket = new QTcpSocket();
+    clientSocket = new QTcpSocket();
     isSocketConnect = false;
     connect(connSocket,SIGNAL(stateChanged(QAbstractSocket::SocketState)),this,
             SLOT(socketStateChanged(QAbstractSocket::SocketState)));
@@ -136,6 +137,19 @@ void TCPHelper::stopServerListen()
 }
 
 /**
+ * @brief 向查询系统发送数据
+ * @param 数组
+ */
+void TCPHelper::sendDataToQuerySystem(QByteArray dataArr)
+{
+    int length=dataArr.length();
+    QByteArray lengthArr=intToByte(length);
+    clientSocket->write(lengthArr);
+    clientSocket->write(dataArr);
+    clientSocket->flush();
+}
+
+/**
  * @brief Socket接收数据
  */
 void TCPHelper::socketReadData()
@@ -157,14 +171,46 @@ void TCPHelper::socketReadData()
 }
 
 /**
+ * @brief 服务端接收客户端Socket数据
+ */
+void TCPHelper::clientSocketReadData()
+{
+    char *data = new char[4];
+
+    clientSocket->read(data,4);
+
+    int len = *(int *)data;
+    if(len>0)
+    {
+        // NOTE:此处出现了char*直接转QString
+        char *data2 = new char[len+1];
+        memset(data2,0,len+1);
+        clientSocket->read(data2,len);
+        QString dataStr(data2);
+        emit socketRecvData(dataStr);
+    }
+}
+
+/**
+ * @brief 客户端退出
+ */
+void TCPHelper::clientSocketDisconnect()
+{
+    tcpSocketConnetList.removeOne(clientSocket);
+    emit newClientDisConnected(clientSocket->peerAddress().toString());
+}
+
+/**
  * @brief 有新客户端加入
  * @param 客户端
  */
 void TCPHelper::newConnectionComing()
 {
-    QTcpSocket *socket = server->nextPendingConnection();
-    tcpSocketConnetList.append(socket);
-    emit newClientConnected(socket->peerAddress().toString());
+    clientSocket = server->nextPendingConnection();
+    connect(clientSocket, SIGNAL(readyRead()), this, SLOT(clientSocketReadData()));
+    connect(clientSocket, SIGNAL(disconnected()), this, SLOT(clientSocketDisconnect()));
+    tcpSocketConnetList.append(clientSocket);
+    emit newClientConnected(clientSocket->peerAddress().toString());
 }
 
 /**
