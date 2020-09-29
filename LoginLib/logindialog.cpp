@@ -91,7 +91,7 @@ void LoginDialog::setupUI()
     logoLabel = new QLabel(this);
     logoLabel->setStyleSheet("background:transparent");
     logoLabel->setPixmap(map);
-    logoLabel->setScaledContents (true);
+    logoLabel->setScaledContents(true);
     logoLabel->setAlignment(Qt::AlignCenter);
 
     // 用户名输入
@@ -99,7 +99,7 @@ void LoginDialog::setupUI()
     userNameEdit->setStyleSheet("background:white");
     userNameEdit->entryEdit->setPlaceholderText(QString::fromLocal8Bit("账户名"));
     userNameEdit->entryEdit->setFont(editFont);
-    userNameEdit->logoLabel->setPixmap (QPixmap(":/images/username"));
+    userNameEdit->logoLabel->setPixmap(QPixmap(":/images/username"));
     QString loginName = iniHelper->readLoginInfo("Login/Username");
     if(loginName.length () > 0)
     {
