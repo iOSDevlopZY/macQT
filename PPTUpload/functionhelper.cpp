@@ -212,9 +212,9 @@ void FunctionHelper::download()
                             // 超时时间30S
                             int timeout = 30000;
 #ifdef Q_OS_MACOS
-                            QString dst = QString("%1/slide%2.jpg").arg(downloadFolder).arg(i);
+                            QString dst = QString("%1/slide%2.jpg").arg(downloadFolder).arg(i,3,10,QLatin1Char('0'));
 #else
-                            QString dst = QString("%1\\slide%2.jpg").arg(downloadFolder).arg(i);
+                            QString dst = QString("%1\\slide%2.jpg").arg(downloadFolder).arg(i,3,10,QLatin1Char('0'));
 #endif
                             QFile f(dst);
 
