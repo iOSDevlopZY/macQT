@@ -208,8 +208,8 @@ void TCPHelper::clientSocketReadData()
          {
              char *data3 = new char[shellRead - readLen];
              int readyRead = clientSocket->read(data3,shellRead - readLen);
+             memcpy(data2+readLen,data3,readyRead);
              readLen += readyRead;
-             sprintf(data2,"%s%s",data2,data3);
              delete [] data3;
          }
          QString dataStr(data2);
