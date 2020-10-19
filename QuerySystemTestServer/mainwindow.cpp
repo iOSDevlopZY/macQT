@@ -101,13 +101,21 @@ void MainWindow::newClientDisconnect(QString clientIP)
 void MainWindow::newClientsocketRecvData(QString data)
 {
     qDebug()<<"接收到的数据为"<<data;
-    QJsonDocument doc = QJsonDocument::fromJson(data.toUtf8());
-    QJsonObject obj = doc.object();
-    if(obj["Type"] == "ClientSupportedQueryAndSettings")
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(data.toUtf8(),&error);
+    if(error.error == QJsonParseError::NoError)
     {
-        // 发送支持的类型
-        sendSupportType();
+        QJsonObject obj = doc.object();
+        if(obj["Type"] == "ClientSupportedQueryAndSettings")
+        {
+            // 发送支持的类型
+            sendSupportType();
+        }
     }
+    else
+    {
+        msgHelper->showCriticalMessage("提示","接收JSON数据解析失败!");
+;    }
 }
 
 /**

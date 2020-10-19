@@ -144,9 +144,11 @@ void TCPHelper::sendDataToQuerySystem(QByteArray dataArr)
 {
     int length=dataArr.length();
     QByteArray lengthArr=intToByte(length);
-    clientSocket->write(lengthArr);
-    clientSocket->write(dataArr);
-    clientSocket->flush();
+    QByteArray array;
+    array.append(lengthArr);
+    array.append(dataArr);
+    clientSocket->write(array);
+    clientSocket->waitForBytesWritten();
 }
 
 /**
@@ -156,18 +158,32 @@ void TCPHelper::socketReadData()
 {
     char *data = new char[4];
 
-    connSocket->read(data,4);
+    clientSocket->read(data,4);
 
     int len = *(int *)data;
     if(len>0)
     {
-        // NOTE:此处出现了char*直接转QString
-        char *data2 = new char[len+1];
-        memset(data2,0,len+1);
-        connSocket->read(data2,len);
-        QString dataStr(data2);
-        emit socketRecvData(dataStr);
+         int shellRead = clientSocket->bytesAvailable();
+         int readLen = 0;
+         char *data2 = new char[shellRead+1];
+         memset(data2,0,shellRead+1);
+         int readyRead = clientSocket->read(data2,shellRead);
+         readLen += readyRead;
+         while(readLen < shellRead)
+         {
+             char *data3 = new char[shellRead - readLen];
+             int readyRead = clientSocket->read(data3,shellRead - readLen);
+             readLen += readyRead;
+             sprintf(data2,"%s%s",data2,data3);
+             delete [] data3;
+         }
+         QString dataStr(data2);
+         emit socketRecvData(dataStr);
+         delete [] data2;
+
     }
+
+    delete [] data;
 }
 
 /**
@@ -182,13 +198,27 @@ void TCPHelper::clientSocketReadData()
     int len = *(int *)data;
     if(len>0)
     {
-        // NOTE:此处出现了char*直接转QString
-        char *data2 = new char[len+1];
-        memset(data2,0,len+1);
-        clientSocket->read(data2,len);
-        QString dataStr(data2);
-        emit socketRecvData(dataStr);
+         int shellRead = clientSocket->bytesAvailable();
+         int readLen = 0;
+         char *data2 = new char[shellRead+1];
+         memset(data2,0,shellRead+1);
+         int readyRead = clientSocket->read(data2,shellRead);
+         readLen += readyRead;
+         while(readLen < shellRead)
+         {
+             char *data3 = new char[shellRead - readLen];
+             int readyRead = clientSocket->read(data3,shellRead - readLen);
+             readLen += readyRead;
+             sprintf(data2,"%s%s",data2,data3);
+             delete [] data3;
+         }
+         QString dataStr(data2);
+         emit socketRecvData(dataStr);
+         delete [] data2;
+
     }
+
+    delete [] data;
 }
 
 /**
