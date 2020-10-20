@@ -117,11 +117,11 @@ void MainWindow::newClientsocketRecvData(QString data)
             int isOK = msgHelper->showChooseMsg("消息","设置项1");
             if(isOK == QMessageBox::Yes)
             {
-                sendSettingMsg(true);
+                sendSettingMsg(true,obj["Type"].toString());
             }
             else
             {
-                sendSettingMsg(false);
+                sendSettingMsg(false,obj["Type"].toString());
             }
         }
         else if(obj["Type"] == "Setting2")
@@ -130,11 +130,11 @@ void MainWindow::newClientsocketRecvData(QString data)
             int isOK = msgHelper->showChooseMsg("消息","设置项2");
             if(isOK == QMessageBox::Yes)
             {
-                sendSettingMsg(true);
+                sendSettingMsg(true,obj["Type"].toString());
             }
             else
             {
-                sendSettingMsg(false);
+                sendSettingMsg(false,obj["Type"].toString());
             }
         }
         else if(obj["Type"] == "Setting3")
@@ -143,11 +143,11 @@ void MainWindow::newClientsocketRecvData(QString data)
             int isOK = msgHelper->showChooseMsg("消息","设置项3");
             if(isOK == QMessageBox::Yes)
             {
-                sendSettingMsg(true);
+                sendSettingMsg(true,obj["Type"].toString());
             }
             else
             {
-                sendSettingMsg(false);
+                sendSettingMsg(false,obj["Type"].toString());
             }
 
         }
@@ -232,10 +232,10 @@ void MainWindow::sendSupportType()
  * @brief 模拟设置是否成功 JSON：{"Type":"SettingResReply","Code":"#成功为200，失败为-1#","Msg":"#只有失败时，写明失败原因#"}
  * @param 设置是否成功
  */
-void MainWindow::sendSettingMsg(bool isSuccess)
+void MainWindow::sendSettingMsg(bool isSuccess,QString type)
 {
     QJsonObject obj;
-    obj.insert("Type","SettingResReply");
+    obj.insert("Type",QString("%1ResReply").arg(type));
     obj.insert("Code",isSuccess?"200":"-1");
     obj.insert("Msg",isSuccess?"":"模拟失败");
     QJsonDocument doc = QJsonDocument(obj);
