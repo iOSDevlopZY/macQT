@@ -31,5 +31,6 @@ private:
     MsgBoxHelper *msgHelper;
 
     void sendSupportType();
+    void sendSettingMsg(bool isSuccess);
 };
 #endif // MAINWINDOW_H

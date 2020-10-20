@@ -112,9 +112,11 @@ void TCPHelper::sendCmdToClient(QString data)
     QByteArray lengthArr=intToByte(length);
     if(isSocketConnect)
     {
-        connSocket->write(lengthArr);
-        connSocket->write(data.toUtf8());
-        connSocket->flush();
+        QByteArray array;
+        array.append(lengthArr);
+        array.append(data.toUtf8());
+        connSocket->write(array);
+        connSocket->waitForBytesWritten();
     }
 }
 
@@ -173,8 +175,8 @@ void TCPHelper::socketReadData()
          {
              char *data3 = new char[shellRead - readLen];
              int readyRead = clientSocket->read(data3,shellRead - readLen);
+             memcpy(data2+readLen,data3,readyRead);
              readLen += readyRead;
-             sprintf(data2,"%s%s",data2,data3);
              delete [] data3;
          }
          QString dataStr(data2);

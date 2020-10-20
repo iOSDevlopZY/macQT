@@ -111,6 +111,46 @@ void MainWindow::newClientsocketRecvData(QString data)
             // 发送支持的类型
             sendSupportType();
         }
+        else if(obj["Type"] == "Setting1")
+        {
+            // 发送支持的类型
+            int isOK = msgHelper->showChooseMsg("消息","设置项1");
+            if(isOK == QMessageBox::Yes)
+            {
+                sendSettingMsg(true);
+            }
+            else
+            {
+                sendSettingMsg(false);
+            }
+        }
+        else if(obj["Type"] == "Setting2")
+        {
+            // 模拟设置成功或失败
+            int isOK = msgHelper->showChooseMsg("消息","设置项2");
+            if(isOK == QMessageBox::Yes)
+            {
+                sendSettingMsg(true);
+            }
+            else
+            {
+                sendSettingMsg(false);
+            }
+        }
+        else if(obj["Type"] == "Setting3")
+        {
+            // 模拟设置成功或失败
+            int isOK = msgHelper->showChooseMsg("消息","设置项3");
+            if(isOK == QMessageBox::Yes)
+            {
+                sendSettingMsg(true);
+            }
+            else
+            {
+                sendSettingMsg(false);
+            }
+
+        }
     }
     else
     {
@@ -186,4 +226,18 @@ void MainWindow::sendSupportType()
     Obj.insert("Data",QString(encodeData));
     QJsonDocument ObjDoc = QJsonDocument(Obj);
     helper->sendDataToQuerySystem(ObjDoc.toJson());
+}
+
+/**
+ * @brief 模拟设置是否成功 JSON：{"Type":"SettingResReply","Code":"#成功为200，失败为-1#","Msg":"#只有失败时，写明失败原因#"}
+ * @param 设置是否成功
+ */
+void MainWindow::sendSettingMsg(bool isSuccess)
+{
+    QJsonObject obj;
+    obj.insert("Type","SettingResReply");
+    obj.insert("Code",isSuccess?"200":"-1");
+    obj.insert("Msg",isSuccess?"":"模拟失败");
+    QJsonDocument doc = QJsonDocument(obj);
+    helper->sendDataToQuerySystem(doc.toJson());
 }
