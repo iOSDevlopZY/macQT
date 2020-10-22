@@ -16,6 +16,7 @@ protected:
     void    dropEvent(QDropEvent *e);
     void    dragEnterEvent(QDragEnterEvent *event);
     void    dragMoveEvent(QDragMoveEvent *event);
+    void    resizeEvent(QResizeEvent *e);
 signals:
 
 };

@@ -32,7 +32,7 @@ void DragLabel::mousePressEvent(QMouseEvent *e)
     //2 自定义Mime类型数据，存储图片数据和位置信息
     QByteArray itemData;
     QDataStream dataStream(&itemData,QIODevice::WriteOnly);
-    dataStream<<pixmap<<QPoint((e->pos().x()-this->pos().x())*0.5,(e->pos().y()-this->pos().y())*0.5);
+    dataStream<<pixmap;
 
     //3 将数据字节数组存入MimeData中，这里相当于setData作用类似<key,value>
     QMimeData *mimeData = new QMimeData;
@@ -58,6 +58,10 @@ void DragLabel::mousePressEvent(QMouseEvent *e)
     if(drag->exec(Qt::CopyAction|Qt::MoveAction,Qt::CopyAction) != Qt::MoveAction)
     {
         // 去掉阴影
+        this->setPixmap(pixmap);
+    }
+    else
+    {
         this->setPixmap(pixmap);
     }
 }

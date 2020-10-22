@@ -13,8 +13,21 @@ DropLabel::DropLabel(QWidget *parent) : QLabel(parent)
  */
 void DropLabel::dropEvent(QDropEvent *e)
 {
-    qDebug()<<"dropEvent";
-    e->accept();
+    if(e->mimeData()->hasFormat("LabelImage"))
+    {
+            this->clear();
+            QByteArray itemData = e->mimeData()->data("LabelImage");
+            QDataStream dataStream(&itemData,QIODevice::ReadOnly);
+            QPixmap pixmap;
+            dataStream>>pixmap;
+            this->setPixmap(pixmap);
+            e->setDropAction(Qt::MoveAction);
+            e->accept();
+    }
+    else
+    {
+            e->ignore();
+    }
 }
 
 /**
@@ -48,5 +61,19 @@ void DropLabel::dragMoveEvent(QDragMoveEvent *event)
     else
     {
         event->ignore();
+    }
+}
+
+/**
+ * @brief 尺寸大小事件
+ * @param e
+ */
+void DropLabel::resizeEvent(QResizeEvent *e)
+{
+    Q_UNUSED(e);
+    if(this->pixmap())
+    {
+        QPixmap map = this->pixmap()->scaled(this->size(), Qt::KeepAspectRatio);
+        this->setPixmap(map);
     }
 }
