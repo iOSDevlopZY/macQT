@@ -1,5 +1,6 @@
 #include "draglabel.h"
 #include <QPainter>
+#include <QDebug>
 
 DragLabel::DragLabel(QWidget *parent):QLabel(parent)
 {
@@ -16,8 +17,7 @@ DragLabel::DragLabel(QWidget *parent):QLabel(parent)
 void DragLabel::setLabelImage(QString imgPath)
 {
     QPixmap pixmap(imgPath);
-    pixmap = pixmap.scaled(this->size(), Qt::KeepAspectRatio);
-    this->setPixmap(pixmap);
+    labelMap = pixmap;
 }
 
 /**
@@ -63,19 +63,12 @@ void DragLabel::mousePressEvent(QMouseEvent *e)
 }
 
 /**
- * @brief 控件拖拽放下事件
- */
-void DragLabel::dropEvent(QDropEvent *e)
-{
-    e->accept();
-}
-
-/**
  * @brief 尺寸大小事件
  * @param e
  */
 void DragLabel::resizeEvent(QResizeEvent *e)
 {
     Q_UNUSED(e);
-    this->pixmap()->scaled(this->size(), Qt::KeepAspectRatio);
+    QPixmap map = labelMap.scaled(this->size(), Qt::KeepAspectRatio);
+    this->setPixmap(map);
 }

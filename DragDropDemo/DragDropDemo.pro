@@ -17,11 +17,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     draglabel.cpp \
+    droplabel.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
     draglabel.h \
+    droplabel.h \
     mainwindow.h
 
 FORMS += \

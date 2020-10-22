@@ -18,10 +18,10 @@ public:
     void setLabelImage(QString imgPath);             // 设置图片
 
 private:
+    QPixmap labelMap;
 
 protected:
     void    mousePressEvent(QMouseEvent *e);
-    void    dropEvent(QDropEvent *e);
     void    resizeEvent(QResizeEvent *e);
 };
 

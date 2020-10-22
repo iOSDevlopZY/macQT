@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "draglabel.h"
+#include "droplabel.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -19,6 +20,7 @@ public:
 private:
     Ui::MainWindow *ui;
     DragLabel *dragLabel;
+    DropLabel *dropLabel;
 
 protected:
     void resizeEvent(QResizeEvent *e);

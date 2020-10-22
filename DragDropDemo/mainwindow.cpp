@@ -11,6 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
     QString imgPath = QCoreApplication::applicationDirPath() + "/labelImage.png";
     dragLabel = new DragLabel(this);
     dragLabel->setLabelImage(imgPath);
+    dropLabel = new DropLabel(this);
 }
 
 MainWindow::~MainWindow()
@@ -26,5 +27,6 @@ void MainWindow::resizeEvent(QResizeEvent *e)
 {
     Q_UNUSED(e);
     dragLabel->setGeometry(0,0,this->size().width()*0.5,this->size().height());
+    dropLabel->setGeometry(this->size().width()*0.5,0,this->size().width()*0.5,this->size().height());
 }
 
