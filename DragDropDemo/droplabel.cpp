@@ -5,6 +5,8 @@ DropLabel::DropLabel(QWidget *parent) : QLabel(parent)
 {
     // 设置接收拖拽
     setAcceptDrops(true);
+    // 设置居中
+    setAlignment(Qt::AlignCenter);
 }
 
 /**

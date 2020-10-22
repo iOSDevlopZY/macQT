@@ -8,6 +8,8 @@ DragLabel::DragLabel(QWidget *parent):QLabel(parent)
     setAcceptDrops(true);
     // 设置背景为黑色
     setStyleSheet("background:black;");
+    // 设置居中
+    setAlignment(Qt::AlignCenter);
 }
 
 /**

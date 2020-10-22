@@ -20,6 +20,7 @@ public:
 private:
     Ui::MainWindow *ui;
     DragLabel *dragLabel;
+    DragLabel *dragLabel2;
     DropLabel *dropLabel;
 
 protected:
