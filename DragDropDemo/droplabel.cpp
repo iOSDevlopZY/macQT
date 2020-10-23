@@ -57,7 +57,7 @@ void DropLabel::dragMoveEvent(QDragMoveEvent *event)
 {
     if(event->mimeData()->hasFormat("LabelImage"))
     {
-        event->setDropAction(Qt::MoveAction); //b.移动操作
+        event->setDropAction(Qt::MoveAction);
         event->accept();
     }
     else
