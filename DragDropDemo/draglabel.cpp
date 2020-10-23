@@ -56,10 +56,10 @@ void DragLabel::mousePressEvent(QMouseEvent *e)
     painter.end();
     this->setPixmap(tempPixmap);
 
-    //6 执行拖动操作，默认设置支持复制操作
+    //6 执行拖动操作，默认设置支持复制操作，去掉阴影
     if(drag->exec(Qt::CopyAction|Qt::MoveAction,Qt::CopyAction) != Qt::MoveAction)
     {
-        // 去掉阴影
+
         this->setPixmap(pixmap);
     }
     else
