@@ -23,7 +23,6 @@ void DropLabel::dropEvent(QDropEvent *e)
             QPixmap pixmap;
             dataStream>>pixmap;
             this->setPixmap(pixmap);
-            e->setDropAction(Qt::MoveAction);
             e->accept();
     }
     else
@@ -40,7 +39,6 @@ void DropLabel::dragEnterEvent(QDragEnterEvent *event)
 {
     if(event->mimeData()->hasFormat("LabelImage"))
     {
-          event->setDropAction(Qt::MoveAction);
           event->accept();
     }
     else
@@ -57,7 +55,6 @@ void DropLabel::dragMoveEvent(QDragMoveEvent *event)
 {
     if(event->mimeData()->hasFormat("LabelImage"))
     {
-        event->setDropAction(Qt::MoveAction);
         event->accept();
     }
     else
