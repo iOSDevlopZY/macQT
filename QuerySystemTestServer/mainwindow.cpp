@@ -157,7 +157,7 @@ void MainWindow::newClientsocketRecvData(QString data)
             int isOK = msgHelper->showChooseMsg("消息","查询项1");
             if(isOK == QMessageBox::Yes)
             {
-                sendQueryMsg(true,obj["Type"].toString(),"QueryData1:{\n\"Data1\":\"测试数据1\",\n\"Data2\":\"测试数据2\",\n\"Data3\":\"测试数据3\",\n\"Data4\":\"测试数据4\"\n}");
+                sendQueryMsg(true,obj["Type"].toString(),"{\n\"Data1\":\"测试数据1\",\n\"Data2\":\"测试数据2\",\n\"Data3\":\"测试数据3\",\n\"Data4\":\"测试数据4\"\n}");
             }
             else
             {
@@ -169,7 +169,7 @@ void MainWindow::newClientsocketRecvData(QString data)
             int isOK = msgHelper->showChooseMsg("消息","查询项2");
             if(isOK == QMessageBox::Yes)
             {
-                sendQueryMsg(true,obj["Type"].toString(),"QueryData2:{\n\"Data1\":\"测试数据1\",\n\"Data2\":\"测试数据2\",\n\"Data3\":\"测试数据3\"\n}");
+                sendQueryMsg(true,obj["Type"].toString(),"{\n\"Data1\":\"测试数据1\",\n\"Data2\":\"测试数据2\",\n\"Data3\":\"测试数据3\"\n}");
             }
             else
             {
