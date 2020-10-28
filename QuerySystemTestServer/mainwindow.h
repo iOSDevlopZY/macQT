@@ -32,5 +32,6 @@ private:
 
     void sendSupportType();
     void sendSettingMsg(bool isSuccess,QString type);
+    void sendQueryMsg(bool isSuccess, QString type, QString data);
 };
 #endif // MAINWINDOW_H

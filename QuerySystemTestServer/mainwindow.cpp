@@ -111,6 +111,7 @@ void MainWindow::newClientsocketRecvData(QString data)
             // 发送支持的类型
             sendSupportType();
         }
+        // 设置项
         else if(obj["Type"] == "Setting1")
         {
             // 发送支持的类型
@@ -149,7 +150,31 @@ void MainWindow::newClientsocketRecvData(QString data)
             {
                 sendSettingMsg(false,obj["Type"].toString());
             }
-
+        }
+        // 查询项
+        else if(obj["Type"] == "Query1")
+        {
+            int isOK = msgHelper->showChooseMsg("消息","查询项1");
+            if(isOK == QMessageBox::Yes)
+            {
+                sendQueryMsg(true,obj["Type"].toString(),"QueryData1:{\n\"Data1\":\"测试数据1\",\n\"Data2\":\"测试数据2\",\n\"Data3\":\"测试数据3\",\n\"Data4\":\"测试数据4\"\n}");
+            }
+            else
+            {
+                sendQueryMsg(false,obj["Type"].toString(),"");
+            }
+        }
+        else if(obj["Type"] == "Query2")
+        {
+            int isOK = msgHelper->showChooseMsg("消息","查询项2");
+            if(isOK == QMessageBox::Yes)
+            {
+                sendQueryMsg(true,obj["Type"].toString(),"QueryData2:{\n\"Data1\":\"测试数据1\",\n\"Data2\":\"测试数据2\",\n\"Data3\":\"测试数据3\"\n}");
+            }
+            else
+            {
+                sendQueryMsg(false,obj["Type"].toString(),"");
+            }
         }
     }
     else
@@ -237,7 +262,24 @@ void MainWindow::sendSettingMsg(bool isSuccess,QString type)
     QJsonObject obj;
     obj.insert("Type",QString("%1ResReply").arg(type));
     obj.insert("Code",isSuccess?"200":"-1");
-    obj.insert("Msg",isSuccess?"":"模拟失败");
+    obj.insert("Msg",isSuccess?"":"模拟设置失败");
+    QJsonDocument doc = QJsonDocument(obj);
+    helper->sendDataToQuerySystem(doc.toJson());
+}
+
+/**
+ * @brief 模拟查询是否成功 JSON：{"Type":"XXXQueryReply","Code":"#成功为200，失败为-1#","Msg":"#只有失败时，写明失败原因#","Data":"#此处为查询项数据，可以为文件流或字符数据，注意UTF-8+Base64#"}
+ * @param 查询是否成功
+ * @param 类型
+ */
+void MainWindow::sendQueryMsg(bool isSuccess, QString type,QString data)
+{
+    QJsonObject obj;
+    obj.insert("Type",QString("%1QueryReply").arg(type));
+    obj.insert("Code",isSuccess?"200":"-1");
+    obj.insert("Msg",isSuccess?"":"模拟查询失败");
+    QString base64Str(data.toUtf8().toBase64());
+    obj.insert("Data",base64Str);
     QJsonDocument doc = QJsonDocument(obj);
     helper->sendDataToQuerySystem(doc.toJson());
 }
